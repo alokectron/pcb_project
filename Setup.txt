@@ -1,0 +1,6 @@
+Install Python if not already there.
+Install Django 5.0 after installing Python 3.10/3.11/3.12
+	Django 5.0 supports Python 3.10, 3.11, and 3.12. 	
+Install Open CV
+pip install opencv-python
+

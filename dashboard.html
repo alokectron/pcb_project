@@ -1,0 +1,136 @@
+<HTML>
+<HEAD>
+<style>
+* {margin: 0; padding: 0;}
+#container {width:100%; font-size: 0;}
+#station_1, #station_2, #station_3 {display: inline-block; *display: inline; zoom: 1; vertical-align: top; font-size: 12px;}
+#station_1 {width: 33%; background: blue;}
+#station_2 {width: 34%; background: green;}
+#station_3 {width: 33%; background: yellow;}
+#station_1_img { object-fit:contain;}
+
+#statistics_container {width:100%; font-size: 0;}
+#station_1_status, #station_2_status, #station_3_status {display: inline-block; *display: inline; zoom: 1; vertical-align: top; font-size: 12px;}
+#station_1_status {width: 33%; }
+#station_2_status {width: 34%; }
+#station_3_status {width: 33%; }
+
+#upd_statistics_container {width:100%; font-size: 0;}
+#upd_station_1_status_errors, #upd_station_1_status_nothing, #upd_station_1_status_count {display: inline-block; *display: inline; zoom: 1; vertical-align: top; font-size: 12px;}
+#upd_station_1_status_errors {width: 33%; background: blue; color:white; font-size:36px;}
+#upd_station_1_status_nothing {width: 34%; }
+#upd_station_1_status_count {width: 33%; background: blue; color:white; font-size:36px;}
+
+.station_status_value {
+background: blue;
+}
+</style>
+<script language="javascript">
+class Station {
+	constructor(name, myid, run_id)
+	{
+		this.name=name;
+		this.id=myid;
+		this.run_id=run_id;
+		this.errors=0;
+		this.totals=0;
+		this.last_upd_ts=0;
+		this.img_available_flg=0;
+		this.latest_cam_img_path="c0.jpg"
+	}
+	//TBD: Update run ID from db	
+
+}
+const station0 = new Station("Solder Paste Check", "SPC", "RUN-00");
+const station1 = new Station("Component Load Check", "CLC", "RUN-00"); 
+const station2 = new Station("Post Solder Check", "PSC", "RUN-00"); 
+
+let stations = [station0, station1, station2];
+for (i=0; i<3; i++)
+	console.log(" Strange "+stations[i].name+":"+stations[i].errors);
+
+let updates_requested =[false, false, false];
+
+async function get_updates_single(ind) {
+	//ind=0;
+	message = "";
+	response = await fetch("update_station/station"+ind+".json?parm="+Date.now());
+	message = await response.text();
+	console.log("What we fetched: "+message);
+	//let message = await response.text();
+	const obj = await JSON.parse(message);
+	stations[ind]= obj;
+} 
+
+function get_updates(){
+	get_updates_single(0);
+	}
+
+function update_station(ind) {
+	the_station = stations[ind];
+	//the_station.errors++;	
+	
+}
+function get_update() {
+	update_station(0);
+	//update_station(2);
+	//update_station(3);
+
+}
+
+function refresh() {
+		//get_update();
+	document.getElementById("upd_station_1_status_errors").innerHTML="Errors "+stations[0].errors;
+	document.getElementById("upd_station_1_status_count").innerHTML="Totals "+stations[0].totals;
+	document.getElementById("station_1_img").src=stations[0].latest_cam_img_path+"?parm="+Date.now();
+}
+
+function setup_display_refresh() {
+var sleep = duration => new Promise(resolve => setTimeout(resolve, duration))
+var poll = (promiseFn, duration) => promiseFn().then(
+             sleep(duration).then(() => poll(promiseFn, duration)))
+
+// Greet the World every second
+poll(() => new Promise(() => refresh()), 1000)
+}
+
+function setup_machine_refresh() {
+var sleep = duration => new Promise(resolve => setTimeout(resolve, duration))
+var poll = (promiseFn, duration) => promiseFn().then(
+             sleep(duration).then(() => poll(promiseFn, duration)))
+
+// Greet the World every second
+poll(() => new Promise(() => get_updates()), 1000)
+}
+
+function setup_refresh() {
+	setup_machine_refresh();
+
+	setup_display_refresh();
+}
+
+</script>
+</HEAD>
+<BODY onload="setup_refresh()">
+	<DIV class="whole_room_img"><IMG src="whole_room.png" width=100%/></DIV>
+<div id="container">
+	<DIV class="station_status" id="station_1"><IMG id="station_1_img" width=100% style="object-fit:cover;" src="status_station_1.png"></DIV>
+	<DIV class="station_status" id="station_2"><IMG id="station_2_img" src="status_station_2.png"></DIV>
+	<DIV class="station_status" id="station_3"><IMG id="station_3_img" src="status_station_3.png"></DIV>
+
+</div>	
+<div id="statistics_container">
+	<DIV class="station_status" id="station_1_status">
+		<div id="upd_statistics_container">
+			<DIV class="station_status" id="upd_station_1_status_errors">Errors 04</DIV>
+			<DIV class="station_status" id="upd_station_1_status_nothing">&nbsp</DIV>
+			<DIV class="station_status" id="upd_station_1_status_count">Total 145</DIV>	
+		</div>
+	</DIV>
+	<DIV class="station_status" id="station_2_status">
+	</DIV>
+	<DIV class="station_status" id="station_3_status"></DIV>
+</div>	
+<input type="button" value="Update" onclick="get_updates()"/>
+</BODY>
+</HTML>
